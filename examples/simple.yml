@@ -1,0 +1,62 @@
+-
+  # metric are stored xer_[name]_[endpoint_name] in this example
+  # curve_a would product a counter metric named xer_set_one_curve_a
+  name: set_one
+  frequency: 5
+  # concurrently pull the following endpoints
+  endpoints:
+    - name: sec
+      url: http://localhost:8080/second
+      # number, string
+      type: number
+      metric: gauge
+    - name: time
+      url: http://localhost:8080/epoch
+      type: number
+      metric: gauge
+    - name: curve_a
+      description: "The a curve"
+      url: http://localhost:8080/curve/1200/10/0
+      type: number
+      metric: gauge
+    - name: curve_b
+      description: "The b curve"
+      url: http://localhost:8080/curve/1/0/4
+      type: number
+      metric: gauge
+    - name: lorem
+      url: http://localhost:8080/lorem
+      type: text
+      metric: none
+  dest:
+    url: "http://localhost:9898/rx/set_one/metrics/"
+    method: POST
+-
+  name: set_two
+  frequency: 10
+  endpoints:
+    - name: sec
+      url: http://localhost:8080/second
+      type: number
+      metric: gauge
+    - name: time
+      url: http://localhost:8080/epoch
+      type: number
+      metric: gauge
+    - name: curve_a
+      description: "The a curve"
+      url: http://localhost:8080/curve/100/5/0
+      type: number
+      metric: gauge
+    - name: curve_b
+      description: "The b curve"
+      url: http://localhost:8080/curve/1/0/4
+      type: number
+      metric: gauge
+    - name: lorem
+      url: http://localhost:8080/lorem
+      type: text
+      metric: none
+  dest:
+    url: "http://localhost:9898/rx/set_two/metrics/"
+    method: POST

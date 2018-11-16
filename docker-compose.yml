@@ -1,0 +1,27 @@
+version: '3.5'
+
+services:
+  # fake api returns mock data
+  fxapi:
+    container_name: fxapi
+    image: txn2/fxapi:latest
+    ports:
+      - 8080:8080
+  # rxrx to receive data from xn2
+  rxtx:
+    container_name: rxtx
+    image: txn2/rxtx:1.3.0
+    # --ingest points to rtbeat
+    command: "--port 9898 --interval 5 --ingest http://localhost:8081/in"
+    ports:
+      - 9898:9898
+    restart: on-failure
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus
+    command: "--config.file=/prometheus/prometheus.yml"
+    volumes:
+      - ./prometheus.yml:/prometheus/prometheus.yml
+    ports:
+      - 9090:9090
+    restart: on-failure
