@@ -1,0 +1,31 @@
+rtbeat:
+  # beat configuration
+  # see https://github.com/txn2/rtbeat/blob/master/rtbeat.reference.yml
+  port: "7070"
+  timeout: 5
+  name: rtbeat-xn2
+
+output.elasticsearch:
+  enabled: false
+  hosts: ["elasticsearch:9200"]
+
+output.logstash:
+  enabled: true
+  hosts: ["logstash:5044"]
+
+setup:
+  template.name: "rtbeat-xn2"
+  template.pattern: "*-xn2-*"
+  template.fields: "/config/fields.yml"
+  template.overwrite: true
+  template.settings:
+    index:
+      number_of_shards: 2
+
+# internal metrics through a HTTP endpoint
+http.enabled: true
+http.port: 5066
+
+# NOTE: Logstash may be configured to use this to determine the destination index
+fields:
+  idx: xn2

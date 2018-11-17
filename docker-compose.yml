@@ -2,26 +2,64 @@ version: '3.5'
 
 services:
   # fake api returns mock data
+  # metrics: http://localhost:8080
   fxapi:
     container_name: fxapi
     image: txn2/fxapi:latest
     ports:
       - 8080:8080
+    restart: on-failure
   # rxrx to receive data from xn2
+  # metrics: http://localhost:9898/metrics
   rxtx:
     container_name: rxtx
-    image: txn2/rxtx:1.3.0
+    image: txn2/rxtx:1.3.2
     # --ingest points to rtbeat
-    command: "--port 9898 --interval 5 --ingest http://localhost:8081/in"
+    command: "--port 9898 --batch 100 --interval 5 --ingest http://rtbeat:7070/in"
     ports:
       - 9898:9898
     restart: on-failure
+  # xn2 (this project)
+  # metrics: http://localhost:8888/metrics
+  xn2:
+    depends_on:
+      - fxapi
+      - rxtx
+    container_name: xn2
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: "--port 8888 --config ./simple.yml"
+    volumes:
+      - ./config/xn2/simple.yml:/simple.yml
+    # for external access from localhost
+    ports:
+      - 8888:8888
+    restart: on-failure
+  # rtbeat for consuming rxtx batches
+  rtbeat:
+    container_name: rtbeat
+    image: txn2/rtbeat:1.1.1
+    command: "-e --path.config=/configs"
+    # for external access from localhost
+    ports:
+      - 7070:7070
+    volumes:
+      - ./config/rtbeat:/configs
+  # prometheus for monitoring all services metrics endpoints
+  # metrics: http://localhost:9090/metrics
+  # ui: http://localhost:9090/graph
   prometheus:
+    depends_on:
+      - fxapi
+      - rxtx
+      - xn2
     container_name: prometheus
     image: prom/prometheus
     command: "--config.file=/prometheus/prometheus.yml"
     volumes:
-      - ./prometheus.yml:/prometheus/prometheus.yml
+      - ./config/prometheus.yml:/prometheus/prometheus.yml
     ports:
       - 9090:9090
     restart: on-failure
+
