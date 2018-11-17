@@ -62,4 +62,17 @@ services:
     ports:
       - 9090:9090
     restart: on-failure
+  # grafana at http://localhost:3000
+  grafana:
+    depends_on:
+      - prometheus
+    container_name: grafana
+    image: grafana/grafana:5.3.4
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    ports:
+      - 3000:3000
+    volumes:
+      - ./config/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./config/grafana/datasources:/etc/grafana/provisioning/datasources
 

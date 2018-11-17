@@ -1,0 +1,11 @@
+apiVersion: 1
+
+datasources:
+  - name: xn2
+    type: prometheus
+    orgId: 1
+    url: http://prometheus:9090
+    isDefault: true
+    version: 1
+    editable: true
+    access: proxy
