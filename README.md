@@ -1,22 +1,20 @@
 # xn2
-WIP: pull, synchronize and package data on interval. 
 
+Pull, synchronize and package data on interval.
 
 ### Development
 
-Start a test API endpoint.
+Build and test **xn2** with `docker-compose up`. `docker-compose` starts a fake api server and configures **xn2** poll metrics from it. **xn2** and all other services are monitored with **prometheus** running at http://localhost:9090.
 
 ```bash
-docker run --rm -p 8080:8080 txn2/fxapi:latest
+docker-compose up --build
 ```
 
-Start receiving with rxtx:
+Run source with local config and no destination:
 
 ```bash
-docker-compose up
+go run ./cmd/xn2.go --port 8282 --config ./config/xn2/local.yml
 ```
 
-Run source
-```bash
-go run ./cmd/xn2.go --debug true --port 8082 --config ./examples/simple.yml
-```
+While running check **prometheus** metrics at https://localhost:8282/metrics
+

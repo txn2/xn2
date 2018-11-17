@@ -38,9 +38,6 @@ type Endpoint struct {
 	// Metric, if defined is used for numbers
 	// to specify a prometheus type of counter or gauge
 	Metric string `yaml:"metric"`
-
-	// gauge for storing metrics
-	gauge prometheus.Gauge
 }
 
 // Dest defines a location and method for sending
@@ -66,13 +63,25 @@ type XSet struct {
 
 	Endpoints []Endpoint `yaml:"endpoints"`
 	Dest      Dest       `yaml:"dest"`
+
+	// counter for storing set metrics
+	epPollCounter *prometheus.CounterVec
+
+	// counter for storing set metrics
+	epPollErrorCounter *prometheus.CounterVec
+
+	// how many times has the set been run
+	totalSetRuns *prometheus.CounterVec
+
+	// gauges for endpoints by endpoint name
+	epGauges map[string]*prometheus.GaugeVec
 }
 
 // Config is used to configure the runner
 type Config struct {
 	CfgYamlFile string
 
-	xSets *[]XSet
+	xSets []XSet
 }
 
 // Runner starts stop and controls XSets.
@@ -86,7 +95,7 @@ func NewRunner(cfg Config) (*Runner, error) {
 		cfg: cfg,
 	}
 
-	runner.cfg.xSets = &[]XSet{}
+	runner.cfg.xSets = []XSet{}
 
 	if cfg.CfgYamlFile != "" {
 		ymlData, err := ioutil.ReadFile(cfg.CfgYamlFile)
@@ -109,14 +118,71 @@ func NewRunner(cfg Config) (*Runner, error) {
 func (r *Runner) Run() (chan string, error) {
 
 	xerMessages := make(chan string, 0)
+	labels := []string{"set"}
+
+	setEpPollCounter := promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "xer_total_ep_polls",
+			Help: "Total endpoint polls for a set.",
+		},
+		labels,
+	)
+
+	setEpPollErrorCounter := promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "xer_total_set_ep_poll_errors",
+			Help: "Total endpoint polling errors for a set.",
+		},
+		labels,
+	)
+
+	setRunsCounter := promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "xer_total_set_runs",
+			Help: "Total set runs.",
+		},
+		labels,
+	)
+
+	// Loop through sets and endpoints, find number endpoints
+	// with metric type gauge and make a uniq list of endpoint names
+	endpointNameMap := map[string]bool{}
+
+	for _, set := range r.cfg.xSets {
+		for _, ep := range set.Endpoints {
+			if ep.Type == "number" && ep.Metric == "gauge" {
+				endpointNameMap[ep.Name] = true
+			}
+		}
+	}
+
+	epGauges := make(map[string]*prometheus.GaugeVec, 0)
+	for epName := range endpointNameMap {
+		epGauges[epName] = promauto.NewGaugeVec(
+			prometheus.GaugeOpts{
+				Name: fmt.Sprintf("xer_ep_%s", epName),
+				Help: fmt.Sprintf("Value for endpoint %s", epName),
+			},
+			[]string{"set"},
+		)
+	}
+
+	// Loops though sets and assign counters and gauges
+	for i := range r.cfg.xSets {
+		r.cfg.xSets[i].epPollCounter = setEpPollCounter
+		r.cfg.xSets[i].epPollErrorCounter = setEpPollErrorCounter
+		r.cfg.xSets[i].totalSetRuns = setRunsCounter
+		r.cfg.xSets[i].epGauges = epGauges
+	}
 
 	// Loops though sets and Run them.
 	go func() {
 		var wg sync.WaitGroup
 
-		for _, set := range *r.cfg.xSets {
+		for _, set := range r.cfg.xSets {
 			xerMessages <- "Run: " + set.Name
 			wg.Add(1)
+
 			go runSet(set, xerMessages, &wg)
 		}
 		xerMessages <- "Done..."
@@ -140,37 +206,6 @@ func runSet(set XSet, msg chan string, wg *sync.WaitGroup) {
 		Timeout: time.Second * 2,
 	}
 
-	polls := promauto.NewCounter(prometheus.CounterOpts{
-		Name: fmt.Sprintf("xer_%s_total_polls", set.Name),
-		Help: fmt.Sprintf("Total number polls for set %s", set.Name),
-	})
-
-	pollErrors := promauto.NewCounter(prometheus.CounterOpts{
-		Name: fmt.Sprintf("xer_%s_total_errors", set.Name),
-		Help: fmt.Sprintf("Total number polling errors for set %s", set.Name),
-	})
-
-	// build metric collectors
-	// loop through endpoints to find metrics
-	for i, ep := range set.Endpoints {
-		if ep.Type == "number" && ep.Metric == "gauge" {
-
-			desc := fmt.Sprintf("%s metric %s", set.Name, ep.Name)
-
-			if ep.Description != "" {
-				desc = fmt.Sprintf("%s: %s", set.Name, ep.Description)
-			}
-
-			set.Endpoints[i].gauge = promauto.NewGauge(prometheus.GaugeOpts{
-				Name: fmt.Sprintf("xer_%s_%s", set.Name, ep.Name),
-				Help: desc,
-			})
-
-			continue
-		}
-
-	}
-
 	epRes := make(map[string]interface{})
 
 	// data structure to store results
@@ -179,8 +214,24 @@ func runSet(set XSet, msg chan string, wg *sync.WaitGroup) {
 		Results: epRes,
 	}
 
+	// gauge for storing values by set labeled with endpoint name
+	//
+	//    xer_set_beta{ep="curve_a"} 48
+	//    xer_set_beta{ep="curve_b"} 0.4333
+	//    xer_set_beta{ep="sec"} 12
+	//    xer_set_beta{ep="time"} 1.542483792e+09
+	//
+	gaugeSetByEp := promauto.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: fmt.Sprintf("xer_set_%s", set.Name),
+			Help: fmt.Sprintf("Endpoint values for %s.", set.Name),
+		},
+		[]string{"ep"},
+	)
+
 	for {
 		msg <- fmt.Sprintf("Running %s", set.Name)
+		set.totalSetRuns.With(prometheus.Labels{"set": set.Name}).Inc()
 
 		// gather data by looping through all the endpoints
 		// collect the data into a map
@@ -188,7 +239,7 @@ func runSet(set XSet, msg chan string, wg *sync.WaitGroup) {
 			resp, err := netClient.Get(ep.URL)
 			if err != nil {
 				msg <- "ERROR: " + err.Error()
-				pollErrors.Inc()
+				set.epPollErrorCounter.With(prometheus.Labels{"set": set.Name}).Inc()
 				continue
 			}
 
@@ -206,30 +257,39 @@ func runSet(set XSet, msg chan string, wg *sync.WaitGroup) {
 				gaugeMetric, err := strconv.ParseFloat(string(body), 64)
 				if err != nil {
 					msg <- "ERROR: " + err.Error()
-					pollErrors.Inc()
+					set.epPollErrorCounter.With(prometheus.Labels{"set": set.Name}).Inc()
 					break
 				}
 
-				ep.gauge.Set(gaugeMetric)
+				gaugeSetByEp.With(prometheus.Labels{"ep": ep.Name}).Set(gaugeMetric)
+
+				if gauge, ok := set.epGauges[ep.Name]; ok {
+					gauge.With(prometheus.Labels{"set": set.Name}).Set(gaugeMetric)
+				}
+
 			}
+
+			set.epPollCounter.With(prometheus.Labels{"set": set.Name}).Inc()
 
 			err = resp.Body.Close()
 			if err != nil {
 				msg <- "ERROR: " + err.Error()
+				set.epPollErrorCounter.With(prometheus.Labels{"set": set.Name}).Inc()
 			}
 
 		}
 
 		// increment the poll stats for this set
-		polls.Inc()
 
 		// Marshal struct into a json byte slice
 		js, _ := json.Marshal(&resPkg)
 
 		// dest
-		err := sendData(set.Dest.Method, set.Dest.URL, js)
-		if err != nil {
-			msg <- "ERROR: " + err.Error()
+		if set.Dest.Method != "" && set.Dest.URL != "" {
+			err := sendData(set.Dest.Method, set.Dest.URL, js)
+			if err != nil {
+				msg <- "ERROR: " + err.Error()
+			}
 		}
 
 		// wait based on a defined frequency
