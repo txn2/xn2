@@ -18,3 +18,15 @@ go run ./cmd/xn2.go --port 8282 --config ./config/xn2/local.yml
 
 While running check **prometheus** metrics at https://localhost:8282/metrics
 
+
+### Release Management
+
+Test release:
+```bash
+goreleaser --skip-publish --rm-dist --skip-validate
+```
+
+Release
+```bash
+GITHUB_TOKEN=$GITHUB_TOKEN goreleaser --rm-dist
+```
