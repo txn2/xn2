@@ -46,6 +46,15 @@ services:
       - 7070:7070
     volumes:
       - ./config/rtbeat:/configs
+  # logstash to logout rtbeat data to stdout on the
+  # container
+  logstash:
+    container_name: logstash
+    image: docker.elastic.co/logstash/logstash:6.5.0
+    volumes:
+      - ./config/logstash/pipeline:/usr/share/logstash/pipeline
+    expose:
+      - 5044
   # prometheus for monitoring all services metrics endpoints
   # metrics: http://localhost:9090/metrics
   # ui: http://localhost:9090/graph

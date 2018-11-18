@@ -116,7 +116,7 @@
       "gauge": {
         "maxValue": 100,
         "minValue": 0,
-        "show": true,
+        "show": false,
         "thresholdLabels": false,
         "thresholdMarkers": true
       },
@@ -158,7 +158,7 @@
         "fillColor": "rgba(31, 118, 189, 0.18)",
         "full": false,
         "lineColor": "rgb(31, 120, 193)",
-        "show": false
+        "show": true
       },
       "tableColumn": "",
       "targets": [
@@ -173,7 +173,7 @@
       "thresholds": "",
       "title": "rtBeat ACKS",
       "type": "singlestat",
-      "valueFontSize": "80%",
+      "valueFontSize": "200%",
       "valueMaps": [
         {
           "op": "=",
@@ -181,7 +181,7 @@
           "value": "null"
         }
       ],
-      "valueName": "avg"
+      "valueName": "current"
     },
     {
       "columns": [],
@@ -649,7 +649,7 @@
     "list": []
   },
   "time": {
-    "from": "now-1h",
+    "from": "now-15m",
     "to": "now"
   },
   "timepicker": {
@@ -680,5 +680,5 @@
   "timezone": "",
   "title": "Xn2 Operational Metrics",
   "uid": "mrSvPffmk",
-  "version": 6
+  "version": 1
 }

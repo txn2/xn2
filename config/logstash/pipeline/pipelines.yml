@@ -1,0 +1,9 @@
+input {
+  beats {
+  port => 5044
+  host => "0.0.0.0"
+  }
+}
+output {
+  stdout { codec => json }
+}
