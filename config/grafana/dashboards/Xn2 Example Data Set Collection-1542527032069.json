@@ -15,7 +15,6 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": 1,
   "links": [
     {
       "icon": "external link",
@@ -43,12 +42,13 @@
       },
       "id": 2,
       "legend": {
+        "alignAsTable": true,
         "avg": true,
         "current": true,
         "max": true,
         "min": true,
         "show": true,
-        "total": false,
+        "total": true,
         "values": true
       },
       "lines": true,
@@ -69,6 +69,7 @@
           "format": "time_series",
           "hide": false,
           "intervalFactor": 1,
+          "legendFormat": "{{set}}",
           "refId": "A"
         }
       ],
@@ -120,20 +121,21 @@
       "datasource": null,
       "fill": 1,
       "gridPos": {
-        "h": 5,
+        "h": 9,
         "w": 10,
         "x": 12,
         "y": 0
       },
       "id": 24,
       "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "show": false,
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "max": true,
+        "min": true,
+        "show": true,
         "total": false,
-        "values": false
+        "values": true
       },
       "lines": false,
       "linewidth": 1,
@@ -152,6 +154,7 @@
           "expr": "xer_ep_curve_a",
           "format": "time_series",
           "intervalFactor": 1,
+          "legendFormat": "{{set}}",
           "refId": "A"
         }
       ],
@@ -198,27 +201,113 @@
     },
     {
       "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "xn2",
+      "fill": 1,
+      "gridPos": {
+        "h": 9,
+        "w": 12,
+        "x": 0,
+        "y": 9
+      },
+      "id": 4,
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "max": true,
+        "min": true,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "percentage": false,
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "xer_ep_curve_b",
+          "format": "time_series",
+          "hide": false,
+          "intervalFactor": 1,
+          "legendFormat": "{{set}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Curve B",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
       "bars": true,
       "dashLength": 10,
       "dashes": false,
       "datasource": null,
       "fill": 1,
       "gridPos": {
-        "h": 5,
+        "h": 9,
         "w": 10,
         "x": 12,
-        "y": 5
+        "y": 9
       },
       "id": 26,
       "legend": {
-        "alignAsTable": false,
-        "avg": false,
+        "alignAsTable": true,
+        "avg": true,
         "current": true,
         "hideEmpty": false,
         "hideZero": false,
-        "max": false,
-        "min": false,
-        "show": false,
+        "max": true,
+        "min": true,
+        "show": true,
         "total": false,
         "values": true
       },
@@ -239,6 +328,7 @@
           "expr": "xer_ep_curve_b",
           "format": "time_series",
           "intervalFactor": 1,
+          "legendFormat": "{{set}}",
           "refId": "A"
         }
       ],
@@ -293,10 +383,11 @@
         "h": 9,
         "w": 12,
         "x": 0,
-        "y": 9
+        "y": 18
       },
-      "id": 4,
+      "id": 22,
       "legend": {
+        "alignAsTable": true,
         "avg": true,
         "current": true,
         "max": true,
@@ -319,17 +410,31 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "xer_ep_curve_b",
+          "expr": "xer_set_alpha{ep=\"curve_a\"}",
           "format": "time_series",
-          "hide": false,
           "intervalFactor": 1,
+          "legendFormat": "{{ep}}",
           "refId": "A"
+        },
+        {
+          "expr": "xer_set_alpha{ep=\"curve_b\"}",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "{{ep}}",
+          "refId": "B"
+        },
+        {
+          "expr": "xer_set_alpha{ep=\"sec\"}",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "{{ep}}",
+          "refId": "C"
         }
       ],
       "thresholds": [],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Curve B",
+      "title": "Alpha Set",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -347,7 +452,7 @@
         {
           "format": "short",
           "label": null,
-          "logBase": 1,
+          "logBase": 2,
           "max": null,
           "min": null,
           "show": true
@@ -384,7 +489,7 @@
         "h": 6,
         "w": 10,
         "x": 12,
-        "y": 10
+        "y": 18
       },
       "heatmap": {},
       "highlightCards": true,
@@ -466,7 +571,7 @@
         "h": 4,
         "w": 5,
         "x": 12,
-        "y": 16
+        "y": 24
       },
       "id": 6,
       "interval": null,
@@ -547,7 +652,7 @@
         "h": 4,
         "w": 5,
         "x": 17,
-        "y": 16
+        "y": 24
       },
       "id": 14,
       "interval": null,
@@ -611,20 +716,21 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "xn2",
+      "datasource": null,
       "fill": 1,
       "gridPos": {
         "h": 9,
         "w": 12,
         "x": 0,
-        "y": 18
+        "y": 27
       },
-      "id": 22,
+      "id": 32,
       "legend": {
+        "alignAsTable": true,
         "avg": false,
-        "current": false,
-        "max": true,
-        "min": true,
+        "current": true,
+        "max": false,
+        "min": false,
         "show": true,
         "total": false,
         "values": true
@@ -643,28 +749,17 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "xer_set_alpha{ep=\"curve_a\"}",
+          "expr": "xer_total_send_poll_errors",
           "format": "time_series",
           "intervalFactor": 1,
+          "legendFormat": "{{set}}",
           "refId": "A"
-        },
-        {
-          "expr": "xer_set_alpha{ep=\"curve_b\"}",
-          "format": "time_series",
-          "intervalFactor": 1,
-          "refId": "B"
-        },
-        {
-          "expr": "xer_set_alpha{ep=\"sec\"}",
-          "format": "time_series",
-          "intervalFactor": 1,
-          "refId": "C"
         }
       ],
       "thresholds": [],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Alpha Set",
+      "title": "rxtx Errors Over Time",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -682,7 +777,7 @@
         {
           "format": "short",
           "label": null,
-          "logBase": 2,
+          "logBase": 1,
           "max": null,
           "min": null,
           "show": true
@@ -723,7 +818,7 @@
         "h": 4,
         "w": 5,
         "x": 12,
-        "y": 20
+        "y": 28
       },
       "id": 8,
       "interval": null,
@@ -804,7 +899,7 @@
         "h": 4,
         "w": 5,
         "x": 17,
-        "y": 20
+        "y": 28
       },
       "id": 16,
       "interval": null,
@@ -884,7 +979,7 @@
         "h": 4,
         "w": 5,
         "x": 12,
-        "y": 24
+        "y": 32
       },
       "id": 10,
       "interval": null,
@@ -964,7 +1059,7 @@
         "h": 4,
         "w": 5,
         "x": 17,
-        "y": 24
+        "y": 32
       },
       "id": 18,
       "interval": null,
@@ -1023,6 +1118,93 @@
       "valueName": "current"
     },
     {
+      "aliasColors": {},
+      "bars": true,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": null,
+      "fill": 1,
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 36
+      },
+      "id": 30,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": true,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": false,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "percentage": false,
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "xer_total_send_poll_errors",
+          "format": "time_series",
+          "intervalFactor": 1,
+          "legendFormat": "{{set}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Send (to rxtx) Errors",
+      "tooltip": {
+        "shared": false,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "series",
+        "name": null,
+        "show": true,
+        "values": [
+          "total"
+        ]
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
       "cacheTimeout": null,
       "colorBackground": false,
       "colorValue": false,
@@ -1044,7 +1226,7 @@
         "h": 4,
         "w": 5,
         "x": 12,
-        "y": 28
+        "y": 36
       },
       "id": 12,
       "interval": null,
@@ -1124,7 +1306,7 @@
         "h": 4,
         "w": 5,
         "x": 17,
-        "y": 28
+        "y": 36
       },
       "id": 20,
       "interval": null,

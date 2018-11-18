@@ -28,6 +28,11 @@
       url: http://localhost:8080/lorem
       type: text
       metric: none
+  # a bad destination will accumulate send error
+  # stats
+  dest:
+    method: POST
+    url: http://bad:4455
 -
   name: beta
   frequency: 10

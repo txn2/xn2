@@ -77,17 +77,21 @@ func main() {
 	go func() {
 		logger.Info("about to run")
 
-		xerMessages, err := xr.Run()
+		xerMessages, xerErrorMessages, err := xr.Run()
 		if err != nil {
 			logger.Error("Runner error.", zap.Error(err))
 			os.Exit(1)
 		}
 
-		for msg := range xerMessages {
-			logger.Info("runner message", zap.String("msg", msg))
+		for {
+			select {
+			case msg := <-xerMessages:
+				logger.Info("runner message", zap.String("msg", msg))
+			case e := <-xerErrorMessages:
+				logger.Error("runner error", zap.Error(e))
+			}
 		}
 
-		logger.Info("Done with runners.")
 	}()
 
 	// Web server

@@ -67,11 +67,20 @@ type XSet struct {
 	// counter for storing set metrics
 	epPollCounter *prometheus.CounterVec
 
-	// counter for storing set metrics
+	// counter for storing scraping error metrics
 	epPollErrorCounter *prometheus.CounterVec
+
+	// counter for storing send error metrics
+	sendErrorCounter *prometheus.CounterVec
 
 	// how many times has the set been run
 	totalSetRuns *prometheus.CounterVec
+
+	// timing scrapes
+	scrapeTiming *prometheus.SummaryVec
+
+	// timing sends
+	sendTiming *prometheus.SummaryVec
 
 	// gauges for endpoints by endpoint name
 	epGauges map[string]*prometheus.GaugeVec
@@ -115,9 +124,11 @@ func NewRunner(cfg Config) (*Runner, error) {
 // Run the sets defined in the configuration.
 // a message channel for log output of this
 // potentially infinite process.
-func (r *Runner) Run() (chan string, error) {
+func (r *Runner) Run() (chan string, chan error, error) {
 
 	xerMessages := make(chan string, 0)
+	xerErrorMessages := make(chan error, 0)
+
 	labels := []string{"set"}
 
 	setEpPollCounter := promauto.NewCounterVec(
@@ -136,10 +147,34 @@ func (r *Runner) Run() (chan string, error) {
 		labels,
 	)
 
+	sendErrorCounter := promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "xer_total_send_poll_errors",
+			Help: "Total errors attempting to send.",
+		},
+		labels,
+	)
+
 	setRunsCounter := promauto.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: "xer_total_set_runs",
 			Help: "Total set runs.",
+		},
+		labels,
+	)
+
+	scrapeTiming := promauto.NewSummaryVec(
+		prometheus.SummaryOpts{
+			Name: "xer_set_scrapetime",
+			Help: "The time it took to scrape endpoints for a set.",
+		},
+		labels,
+	)
+
+	sendTiming := promauto.NewSummaryVec(
+		prometheus.SummaryOpts{
+			Name: "xer_set_sendtime",
+			Help: "The time it took to send data to dest.",
 		},
 		labels,
 	)
@@ -171,8 +206,11 @@ func (r *Runner) Run() (chan string, error) {
 	for i := range r.cfg.xSets {
 		r.cfg.xSets[i].epPollCounter = setEpPollCounter
 		r.cfg.xSets[i].epPollErrorCounter = setEpPollErrorCounter
+		r.cfg.xSets[i].sendErrorCounter = sendErrorCounter
 		r.cfg.xSets[i].totalSetRuns = setRunsCounter
 		r.cfg.xSets[i].epGauges = epGauges
+		r.cfg.xSets[i].scrapeTiming = scrapeTiming
+		r.cfg.xSets[i].sendTiming = sendTiming
 	}
 
 	// Loops though sets and Run them.
@@ -183,15 +221,16 @@ func (r *Runner) Run() (chan string, error) {
 			xerMessages <- "Run: " + set.Name
 			wg.Add(1)
 
-			go runSet(set, xerMessages, &wg)
+			go runSet(set, xerMessages, xerErrorMessages, &wg)
 		}
 		xerMessages <- "Done..."
 
 		wg.Wait()
 		close(xerMessages)
+		close(xerErrorMessages)
 	}()
 
-	return xerMessages, nil
+	return xerMessages, xerErrorMessages, nil
 }
 
 type ResultPackage struct {
@@ -199,7 +238,7 @@ type ResultPackage struct {
 	Results map[string]interface{} `json:"results"`
 }
 
-func runSet(set XSet, msg chan string, wg *sync.WaitGroup) {
+func runSet(set XSet, msg chan string, errmsg chan error, wg *sync.WaitGroup) {
 
 	// http client for set
 	netClient := &http.Client{
@@ -230,7 +269,11 @@ func runSet(set XSet, msg chan string, wg *sync.WaitGroup) {
 	)
 
 	for {
+		start := time.Now()
+
 		msg <- fmt.Sprintf("Running %s", set.Name)
+
+		// increment the poll stats for this set
 		set.totalSetRuns.With(prometheus.Labels{"set": set.Name}).Inc()
 
 		// gather data by looping through all the endpoints
@@ -238,7 +281,7 @@ func runSet(set XSet, msg chan string, wg *sync.WaitGroup) {
 		for _, ep := range set.Endpoints {
 			resp, err := netClient.Get(ep.URL)
 			if err != nil {
-				msg <- "ERROR: " + err.Error()
+				errmsg <- err
 				set.epPollErrorCounter.With(prometheus.Labels{"set": set.Name}).Inc()
 				continue
 			}
@@ -256,7 +299,7 @@ func runSet(set XSet, msg chan string, wg *sync.WaitGroup) {
 			if ep.Type == "number" && ep.Metric == "gauge" {
 				gaugeMetric, err := strconv.ParseFloat(string(body), 64)
 				if err != nil {
-					msg <- "ERROR: " + err.Error()
+					errmsg <- err
 					set.epPollErrorCounter.With(prometheus.Labels{"set": set.Name}).Inc()
 					break
 				}
@@ -273,23 +316,30 @@ func runSet(set XSet, msg chan string, wg *sync.WaitGroup) {
 
 			err = resp.Body.Close()
 			if err != nil {
-				msg <- "ERROR: " + err.Error()
+				errmsg <- err
 				set.epPollErrorCounter.With(prometheus.Labels{"set": set.Name}).Inc()
 			}
 
 		}
 
-		// increment the poll stats for this set
+		elapsed := time.Since(start)
+
+		set.scrapeTiming.With(prometheus.Labels{"set": set.Name}).Observe(elapsed.Seconds())
 
 		// Marshal struct into a json byte slice
 		js, _ := json.Marshal(&resPkg)
 
 		// dest
 		if set.Dest.Method != "" && set.Dest.URL != "" {
+			start = time.Now()
 			err := sendData(set.Dest.Method, set.Dest.URL, js)
 			if err != nil {
-				msg <- "ERROR: " + err.Error()
+				errmsg <- err
+				set.sendErrorCounter.With(prometheus.Labels{"set": set.Name}).Inc()
 			}
+
+			elapsed := time.Since(start)
+			set.sendTiming.With(prometheus.Labels{"set": set.Name}).Observe(elapsed.Seconds())
 		}
 
 		// wait based on a defined frequency
@@ -307,7 +357,7 @@ func sendData(method string, url string, js []byte) error {
 	}
 
 	// Post JSON
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(js))
+	req, err := http.NewRequest(method, url, bytes.NewBuffer(js))
 	if err != nil {
 		return err
 	}
