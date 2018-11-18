@@ -38,6 +38,8 @@ services:
     restart: on-failure
   # rtbeat for consuming rxtx batches
   rtbeat:
+    depends_on:
+      - logstash
     container_name: rtbeat
     image: txn2/rtbeat:1.1.1
     command: "-e --path.config=/configs"
@@ -49,12 +51,28 @@ services:
   # logstash to logout rtbeat data to stdout on the
   # container
   logstash:
+    depends_on:
+      - elasticsearch
     container_name: logstash
     image: docker.elastic.co/logstash/logstash:6.5.0
     volumes:
       - ./config/logstash/pipeline:/usr/share/logstash/pipeline
     expose:
       - 5044
+  # elastic search to consume from logstash
+  # query elastic: curl http://localhost:9200/xn2/_stats | jsonpp
+  elasticsearch:
+    container_name: elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.5.0
+    ports:
+      - 9200:9200
+  # kibana to query elastic data
+  # ui: http://localhost:5601
+  kibana:
+    container_name: kibana
+    image: docker.elastic.co/kibana/kibana:6.5.0
+    ports:
+      - 5601:5601
   # prometheus for monitoring all services metrics endpoints
   # metrics: http://localhost:9090/metrics
   # ui: http://localhost:9090/graph

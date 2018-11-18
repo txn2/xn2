@@ -6,4 +6,10 @@ input {
 }
 output {
   stdout { codec => json }
+
+  elasticsearch {
+    hosts => "http://elasticsearch:9200"
+    index => "xn2"
+  }
 }
+

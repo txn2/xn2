@@ -29,7 +29,7 @@
       type: text
       metric: none
   dest:
-    url: "http://rxtx:9898/rx/set_one/metrics/"
+    url: "http://rxtx:9898/rx/alpha/metrics/"
     method: POST
 -
   name: beta
@@ -58,5 +58,39 @@
       type: text
       metric: none
   dest:
-    url: "http://rxtx:9898/rx/set_two/metrics/"
+    url: "http://rxtx:9898/rx/beta/metrics/"
+    method: POST
+-
+  name: gamma
+  frequency: 3
+  endpoints:
+    - name: curve_a
+      description: "The a curve"
+      url: http://fxapi:8080/curve/200/8/0
+      type: number
+      metric: gauge
+    - name: curve_b
+      description: "The b curve"
+      url: http://fxapi:8080/curve/1/3/2
+      type: number
+      metric: gauge
+  dest:
+    url: "http://rxtx:9898/rx/gamma/metrics/"
+    method: POST
+-
+  name: delta
+  frequency: 4
+  endpoints:
+    - name: curve_a
+      description: "The a curve"
+      url: http://fxapi:8080/curve/20/8/0
+      type: number
+      metric: gauge
+    - name: curve_b
+      description: "The b curve"
+      url: http://fxapi:8080/curve/3/3/2
+      type: number
+      metric: gauge
+  dest:
+    url: "http://rxtx:9898/rx/delta/metrics/"
     method: POST
