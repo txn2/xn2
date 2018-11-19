@@ -29,6 +29,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    image: txn2/xn2
     command: "--port 8888 --config ./simple.yml"
     volumes:
       - ./config/xn2/simple.yml:/simple.yml
