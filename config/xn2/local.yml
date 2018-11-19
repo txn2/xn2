@@ -10,25 +10,20 @@ sets:
       url: http://localhost:8080/second
       # number, string
       type: number
-      metric: gauge
     - name: time
       url: http://localhost:8080/epoch
       type: number
-      metric: gauge
     - name: curve_a
       description: "The a curve"
       url: http://localhost:8080/curve/1200/10/0
       type: number
-      metric: gauge
     - name: curve_b
       description: "The b curve"
       url: http://localhost:8080/curve/1/0/4
       type: number
-      metric: gauge
     - name: lorem
       url: http://localhost:8080/lorem
       type: text
-      metric: none
   # a bad destination will accumulate send error
   # stats
   dest:
@@ -41,22 +36,17 @@ sets:
     - name: sec
       url: http://localhost:8080/second
       type: number
-      metric: gauge
     - name: time
       url: http://localhost:8080/epoch
       type: number
-      metric: gauge
     - name: curve_a
       description: "The a curve"
       url: http://localhost:8080/curve/100/5/0
       type: number
-      metric: gauge
     - name: curve_b
       description: "The b curve"
       url: http://localhost:8080/curve/1/0/4
       type: number
-      metric: gauge
     - name: lorem
       url: http://localhost:8080/lorem
       type: text
-      metric: none

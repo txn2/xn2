@@ -34,10 +34,6 @@ type Endpoint struct {
 	// Type defines the data type as on of
 	// text or number
 	Type string `yaml:"type"`
-
-	// Metric, if defined is used for numbers
-	// to specify a prometheus type of counter or gauge
-	Metric string `yaml:"metric"`
 }
 
 // Dest defines a location and method for sending
@@ -186,12 +182,11 @@ func (r *Runner) Run() (chan string, chan error, error) {
 	)
 
 	// Loop through sets and endpoints, find number endpoints
-	// with metric type gauge and make a uniq list of endpoint names
 	endpointNameMap := map[string]bool{}
 
 	for _, set := range r.cfg.xSets {
 		for _, ep := range set.Endpoints {
-			if ep.Type == "number" && ep.Metric == "gauge" {
+			if ep.Type == "number" {
 				endpointNameMap[ep.Name] = true
 			}
 		}
@@ -301,8 +296,9 @@ func runSet(set XSet, msg chan string, errmsg chan error, wg *sync.WaitGroup) {
 				resPkg.Results[ep.Name], _ = strconv.ParseFloat(string(body), 64)
 			}
 
-			// if the type is a number and metric is gauge
-			if ep.Type == "number" && ep.Metric == "gauge" {
+			// if the type is a number use it as a prometheus
+			// metric
+			if ep.Type == "number" {
 				gaugeMetric, err := strconv.ParseFloat(string(body), 64)
 				if err != nil {
 					errmsg <- err

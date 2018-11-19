@@ -9,26 +9,21 @@ sets:
       url: http://fxapi:8080/second
       # number, string
       type: number
-      metric: gauge
     - name: time
       url: http://fxapi:8080/epoch
       type: number
-      metric: gauge
     - name: curve_a
       description: "The a curve"
       url: http://fxapi:8080/curve/1200/10/0
       # example metric xer_ep_curve_a{instance="xn2:8888",job="xn2",set="alpha"}
       type: number
-      metric: gauge
     - name: curve_b
       description: "The b curve"
       url: http://fxapi:8080/curve/1/0/4
       type: number
-      metric: gauge
     - name: lorem
       url: http://fxapi:8080/lorem
       type: text
-      metric: none
   dest:
     url: "http://rxtx:9898/rx/alpha/metrics/"
     method: POST
@@ -39,25 +34,20 @@ sets:
     - name: sec
       url: http://fxapi:8080/second
       type: number
-      metric: gauge
     - name: time
       url: http://fxapi:8080/epoch
       type: number
-      metric: gauge
     - name: curve_a
       description: "The a curve"
       url: http://fxapi:8080/curve/100/5/0
       type: number
-      metric: gauge
     - name: curve_b
       description: "The b curve"
       url: http://fxapi:8080/curve/1/2/4
       type: number
-      metric: gauge
     - name: lorem
       url: http://fxapi:8080/lorem
       type: text
-      metric: none
   dest:
     url: "http://rxtx:9898/rx/beta/metrics/"
     method: POST
@@ -69,12 +59,10 @@ sets:
       description: "The a curve"
       url: http://fxapi:8080/curve/200/8/0
       type: number
-      metric: gauge
     - name: curve_b
       description: "The b curve"
       url: http://fxapi:8080/curve/1/3/2
       type: number
-      metric: gauge
   dest:
     url: "http://rxtx:9898/rx/gamma/metrics/"
     method: POST
@@ -86,12 +74,10 @@ sets:
       description: "The a curve"
       url: http://fxapi:8080/curve/20/8/0
       type: number
-      metric: gauge
     - name: curve_b
       description: "The b curve"
       url: http://fxapi:8080/curve/3/3/2
       type: number
-      metric: gauge
   dest:
     url: "http://rxtx:9898/rx/delta/metrics/"
     method: POST
