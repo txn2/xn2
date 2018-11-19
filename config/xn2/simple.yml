@@ -1,3 +1,4 @@
+sets:
 -
   # example metric xer_ep_curve_a{instance="xn2:8888",job="xn2",set="alpha"}
   name: alpha

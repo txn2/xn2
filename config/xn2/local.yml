@@ -1,3 +1,4 @@
+sets:
 -
   # metric are stored xer_[name]_[endpoint_name] in this example
   # curve_a would product a counter metric named xer_set_one_curve_a

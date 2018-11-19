@@ -2,10 +2,11 @@
 
 Pull, synchronize and package data on interval. Xn2 is a data scraper / muxer, combining data from multiple URLs defined by a set.
 
-See the xxample configuration used for testing with `docker-compose`: [simple.yml](./config/xn2/simple.yml)
-
+See the example configuration used for testing with `docker-compose up`: [simple.yml](./config/xn2/simple.yml)
 
 Build and test **xn2** with `docker-compose up`. `docker-compose` starts a fake api server and configures **xn2** poll metrics from it. **xn2** and all other services are monitored with **prometheus**.
+
+The diagram below shows the flow of data from a **set**.
 
 ### Demo
 

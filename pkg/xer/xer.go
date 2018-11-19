@@ -86,6 +86,10 @@ type XSet struct {
 	epGauges map[string]*prometheus.GaugeVec
 }
 
+type SetCfg struct {
+	Sets []XSet `yaml:"sets"`
+}
+
 // Config is used to configure the runner
 type Config struct {
 	CfgYamlFile string
@@ -104,18 +108,20 @@ func NewRunner(cfg Config) (*Runner, error) {
 		cfg: cfg,
 	}
 
-	runner.cfg.xSets = []XSet{}
-
 	if cfg.CfgYamlFile != "" {
 		ymlData, err := ioutil.ReadFile(cfg.CfgYamlFile)
 		if err != nil {
 			return runner, err
 		}
 
-		err = yaml.Unmarshal([]byte(ymlData), &runner.cfg.xSets)
+		setCfg := &SetCfg{}
+
+		err = yaml.Unmarshal([]byte(ymlData), &setCfg)
 		if err != nil {
 			return runner, err
 		}
+
+		runner.cfg.xSets = setCfg.Sets
 	}
 
 	return runner, nil
