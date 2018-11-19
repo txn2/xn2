@@ -25,9 +25,6 @@ build:
 
   ldflags: -s -w -X main.Version={{.Version}}
 
-sign:
-  artifacts: checksum
-
 release:
   # Repo in which the release will be created.
   # Default is extracted from the origin remote URL.
