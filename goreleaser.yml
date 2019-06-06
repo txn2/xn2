@@ -93,35 +93,6 @@ archive:
   files:
     - LICENSE
 
-brew:
-  name: kubefwd
-
-  github:
-    owner: txn2
-    name: homebrew-tap
-
-  commit_author:
-    name: Craig Johnston
-    email: cjimti@gmail.com
-
-  folder: Formula
-
-  homepage: https://github.com/txn2/xn2
-
-  description: "Metrics scraper and muxer."
-
-  skip_upload: false
-
-  test: |-
-    kubefwd version
-
-snapcraft:
-  name_template: '{{ .ProjectName }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
-  summary: Metrics scraper and muxer.
-  description: |
-    Metrics scraper and muxer.
-  grade: stable
-  confinement: classic
 
 dockers:
   -
@@ -130,19 +101,27 @@ dockers:
     goarm: ''
     binary: xn2
     image: txn2/xn2
-    dockerfile: ./dockerfiles/amd64/Dockerfile
+    dockerfile: Dockerfile
     tag_templates:
       - "{{ .Tag }}"
       - "v{{ .Major }}"
       - latest
+    build_flag_templates:
+      - "--label=org.label-schema.schema-version=1.0"
+      - "--label=org.label-schema.version={{.Version}}"
+      - "--label=org.label-schema.name={{.ProjectName}}"
   -
     goos: linux
     goarch: arm
     goarm: 6
     binary: xn2
     image: txn2/xn2
-    dockerfile: ./dockerfiles/arm32v6/Dockerfile
+    dockerfile: Dockerfile
     tag_templates:
       - "armv6-{{ .Tag }}"
       - "armv6-v{{ .Major }}"
-      - arm-latest
+      - "armv6-latest"
+    build_flag_templates:
+      - "--label=org.label-schema.schema-version=1.0"
+      - "--label=org.label-schema.version={{.Version}}"
+      - "--label=org.label-schema.name={{.ProjectName}}"

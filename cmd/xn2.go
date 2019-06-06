@@ -6,11 +6,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/txn2/xn2/pkg/xer"
-
 	"github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/txn2/xn2/pkg/xer"
 	"go.uber.org/zap"
 )
 
